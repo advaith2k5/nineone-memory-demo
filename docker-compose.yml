@@ -1,0 +1,25 @@
+# One Postgres 16 with the pgvector extension. Port 5433 on your laptop so it
+# does not clash with any Postgres you may already have on 5432.
+# Only ./src/nineone_mem/db/schema.sql is mounted below (line with 01_schema.sql). It runs once, the
+# first time the container starts with an empty data volume. Later changes to it must be applied by hand.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: nineone_mem_pg
+    environment:
+      POSTGRES_USER: nineone
+      POSTGRES_PASSWORD: nineone
+      POSTGRES_DB: nineone_mem
+    ports:
+      - "5433:5432"
+    volumes:
+      - nineone_mem_data:/var/lib/postgresql/data
+      - ./src/nineone_mem/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nineone -d nineone_mem"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  nineone_mem_data:
